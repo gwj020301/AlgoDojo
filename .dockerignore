@@ -1,0 +1,13 @@
+# Keep the Docker build context small.
+**/.venv
+**/node_modules
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+**/.mypy_cache
+frontend/dist
+.git
+.work-master
+**/.DS_Store
+**/seed/problems.draft.yaml

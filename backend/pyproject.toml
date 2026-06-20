@@ -1,0 +1,63 @@
+[project]
+name = "algodojo-backend"
+version = "0.1.0"
+description = "AlgoDojo backend API (FastAPI)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "asyncpg>=0.30.0",
+    "alembic>=1.14.0",
+    "redis>=5.2.0",
+    "pyyaml>=6.0.2",
+    "httpx>=0.27.0",
+    "pyjwt>=2.10.0",
+    "algodojo-judge",
+]
+
+[tool.uv.sources]
+algodojo-judge = { path = "../judge", editable = true }
+
+[dependency-groups]
+dev = [
+    "ruff>=0.8.0",
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.0",
+    "aiosqlite>=0.20.0",
+    "types-pyyaml>=6.0.12",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["app"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C4", "SIM"]
+# B008: calling Depends()/Query()/Cookie() in argument defaults is the standard
+# FastAPI dependency-injection pattern, not a bug.
+ignore = ["B008"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+# TestCase is a domain model, not a pytest test class.
+filterwarnings = ["ignore::pytest.PytestCollectionWarning"]
+markers = [
+    "integration: tests requiring external services (Redis); skipped if unavailable",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]

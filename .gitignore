@@ -28,3 +28,6 @@ build/
 # Logs
 *.log
 logs/
+
+# Generated seed draft (reproducible from hot100.md + curated overlay)
+backend/seed/problems.draft.yaml

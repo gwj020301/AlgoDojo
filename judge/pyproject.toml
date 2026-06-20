@@ -1,0 +1,40 @@
+[project]
+name = "algodojo-judge"
+version = "0.1.0"
+description = "AlgoDojo judge sandbox: language runners + Docker execution engine"
+readme = "README.md"
+requires-python = ">=3.10"
+# Runtime is stdlib-only (the in-container runner must run on the slim image,
+# and the host engine shells out to the `docker` CLI). No third-party deps.
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "ruff>=0.8.0",
+    "pytest>=8.3.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["dojo_judge"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C4", "SIM"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::pytest.PytestCollectionWarning"]
+markers = [
+    "integration: tests that build/run real Docker containers (require Docker daemon)",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["dojo_judge"]

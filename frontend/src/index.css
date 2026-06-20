@@ -1,0 +1,59 @@
+:root {
+  --paper: #efe3c8;
+  --paper-2: #f6eed8;
+  --panel: #f8f1de;
+  --ink: #2e2a22;
+  --ink-2: #6b6353;
+  --cinnabar: #9c2b1b;
+  --cinnabar-soft: #b3493a;
+  --dai: #34534b;
+  --bamboo: #8a6d3b;
+  --border: #cdbb95;
+  --border-soft: #ddcfac;
+
+  font-family: 'Kaiti SC', 'STKaiti', 'KaiTi', 'Songti SC', 'Noto Serif SC', 'SimSun', serif;
+  line-height: 1.7;
+  color: var(--ink);
+  background-color: var(--paper);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.35), transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(140, 109, 59, 0.08), transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(46, 42, 34, 0.02), transparent 60%);
+  background-attachment: fixed;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+
+a {
+  color: var(--dai);
+}
+
+::selection {
+  background: rgba(156, 43, 27, 0.18);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 6px;
+}

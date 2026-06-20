@@ -1,0 +1,117 @@
+# AlgoDojo stack: PostgreSQL + Redis + API + Worker.
+#
+# Prerequisites:
+#   1. Build the judge sandbox image on the host (the worker launches it via the
+#      host Docker daemon):
+#        docker build -t algodojo-judge:latest judge/
+#   2. Create deploy/.env from deploy/.env.example (GitHub OAuth creds + JWT secret).
+#
+# Run (from the repo root):
+#   docker compose -f deploy/docker-compose.yml up -d --build
+#
+# Services: postgres, redis, init (migrate+seed, runs once), api, worker.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: algodojo-postgres
+    environment:
+      POSTGRES_USER: algodojo
+      POSTGRES_PASSWORD: algodojo
+      POSTGRES_DB: algodojo
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U algodojo -d algodojo"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: algodojo-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # One-shot: apply migrations then seed the problem bank, then exit.
+  init:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: api
+    container_name: algodojo-init
+    command: ["sh", "-c", "alembic upgrade head && python -m app.seed.loader"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+asyncpg://algodojo:algodojo@postgres:5432/algodojo
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: api
+    container_name: algodojo-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+asyncpg://algodojo:algodojo@postgres:5432/algodojo
+      REDIS_URL: redis://redis:6379/0
+      DEBUG: "false"
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: worker
+    container_name: algodojo-worker
+    command: ["python", "-m", "app.submissions.worker"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+asyncpg://algodojo:algodojo@postgres:5432/algodojo
+      REDIS_URL: redis://redis:6379/0
+      JUDGE_IMAGE: algodojo-judge:latest
+      DEBUG: "false"
+    # SECURITY: mounting the Docker socket grants the worker root-equivalent
+    # control of the host Docker daemon. See deploy/README.md for the risk and
+    # production-hardening alternatives (dedicated judge node / remote Docker API).
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      init:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:
+  redisdata:

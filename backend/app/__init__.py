@@ -1,0 +1,1 @@
+"""AlgoDojo backend application package."""
