@@ -1,5 +1,5 @@
 import Editor from '@monaco-editor/react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import {
@@ -13,12 +13,26 @@ import {
   unlockHint,
 } from '../api/client';
 import Header from '../components/Header';
+import {
+  clearDraft,
+  loadDraft,
+  loadLanguage,
+  saveDraft,
+  saveLanguage,
+} from '../lib/draftStore';
 
 const HINT_LEVEL_LABEL: Record<number, string> = {
   1: '思路方向',
   2: '关键步骤',
   3: '伪代码',
   4: '完整题解',
+};
+
+const HINT_LEVEL_ICON: Record<number, string> = {
+  1: '🧭',
+  2: '🔑',
+  3: '⌨️',
+  4: '🎯',
 };
 
 const MONACO_LANG: Record<string, string> = {
@@ -42,10 +56,6 @@ const VERDICT_LABEL: Record<string, string> = {
   RE: '💥 运行时错误 (Runtime Error)',
 };
 
-function draftKey(problemId: number, language: string): string {
-  return `algodojo_draft_${problemId}_${language}`;
-}
-
 export default function ProblemPage() {
   const { id } = useParams<{ id: string }>();
   const problemId = Number(id);
@@ -58,47 +68,60 @@ export default function ProblemPage() {
   const [error, setError] = useState<string | null>(null);
   const [hints, setHints] = useState<HintsState | null>(null);
   const [hintsOpen, setHintsOpen] = useState(false);
+  const [tipsOpen, setTipsOpen] = useState(false);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [restored, setRestored] = useState(false);
 
   const pollRef = useRef<number | null>(null);
 
-  // Load the saved draft for a language, falling back to the template.
-  const loadCodeFor = useCallback(
-    (p: ProblemDetail, lang: string): string => {
-      const draft = localStorage.getItem(draftKey(p.id, lang));
-      if (draft != null) return draft;
-      return p.templates[lang] ?? '';
-    },
-    [],
-  );
+  const applyCodeFor = useCallback((p: ProblemDetail, lang: string): void => {
+    const { code: c, restored: r, savedAt: s } = loadDraft(p.id, lang, p.templates[lang] ?? '');
+    setCode(c);
+    setRestored(r);
+    setSavedAt(s ? new Date(s).toLocaleString('zh-CN', { hour12: false }) : null);
+  }, []);
 
   useEffect(() => {
     getProblem(problemId)
       .then((p) => {
         setProblem(p);
-        const lang = p.languages[0] ?? 'python';
+        const lang = loadLanguage(p.id, p.languages, p.languages[0] ?? 'python');
         setLanguage(lang);
-        setCode(loadCodeFor(p, lang));
+        applyCodeFor(p, lang);
       })
       .catch((e: Error) => setError(e.message));
     return () => {
       if (pollRef.current) window.clearInterval(pollRef.current);
     };
-  }, [problemId, loadCodeFor]);
+  }, [problemId, applyCodeFor]);
 
   function onCodeChange(value: string | undefined) {
     const next = value ?? '';
     setCode(next);
-    if (problem) localStorage.setItem(draftKey(problem.id, language), next);
+    setRestored(false);
+    if (problem) {
+      const iso = saveDraft(problem.id, language, next);
+      setSavedAt(new Date(iso).toLocaleString('zh-CN', { hour12: false }));
+    }
   }
 
   function onLanguageChange(nextLang: string) {
     if (!problem || nextLang === language) return;
-    // Requirement 3.3: warn before switching that current code may be replaced.
     if (code.trim() !== '' && !window.confirm('切换语言会加载该语言的草稿/模板，确定切换吗？')) {
       return;
     }
     setLanguage(nextLang);
-    setCode(loadCodeFor(problem, nextLang));
+    saveLanguage(problem.id, nextLang);
+    applyCodeFor(problem, nextLang);
+  }
+
+  function resetToTemplate() {
+    if (!problem) return;
+    if (!window.confirm('确定丢弃当前草稿、恢复为初始模板吗？此操作不可撤销。')) return;
+    clearDraft(problem.id, language);
+    setCode(problem.templates[language] ?? '');
+    setRestored(false);
+    setSavedAt(null);
   }
 
   function startPolling(submissionId: string) {
@@ -204,6 +227,31 @@ export default function ProblemPage() {
             </div>
           )}
 
+          {problem.knowledge_tips.length > 0 && (
+            <div className="tips-box">
+              <button className="tips-toggle" onClick={() => setTipsOpen((v) => !v)}>
+                📚 相关基础知识 {tipsOpen ? '▲' : '▼'}
+              </button>
+              {tipsOpen && (
+                <div className="tips-panel">
+                  {problem.knowledge_tips.map((tip, i) => {
+                    const snippet =
+                      tip.code?.[language] ??
+                      tip.code?.python ??
+                      Object.values(tip.code ?? {})[0];
+                    return (
+                      <div key={i} className="tip-item">
+                        <h4>{tip.title}</h4>
+                        <p>{tip.content}</p>
+                        {snippet && <pre className="tip-code">{snippet}</pre>}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="learn-links">
             <Link to={`/patterns?q=${encodeURIComponent(problem.topic_name)}`} className="pattern-link">
               查看「{problem.topic_name}」相关套路 →
@@ -222,11 +270,18 @@ export default function ProblemPage() {
                 {hints && hints.total_levels === 0 && <p className="hint">本题暂无提示。</p>}
                 {hints &&
                   hints.unlocked.map((h) => (
-                    <div key={h.level} className="hint-item">
-                      <strong>
-                        {h.level}. {HINT_LEVEL_LABEL[h.level] ?? `提示 ${h.level}`}
-                      </strong>
-                      <p>{h.content}</p>
+                    <div key={h.level} className={`hint-item hint-level-${h.level}`}>
+                      <div className="hint-head">
+                        <span className="hint-badge">{HINT_LEVEL_ICON[h.level] ?? '💡'}</span>
+                        <strong>
+                          第 {h.level} 层 · {HINT_LEVEL_LABEL[h.level] ?? `提示 ${h.level}`}
+                        </strong>
+                      </div>
+                      {h.level === 3 || h.content.includes('\n') ? (
+                        <pre className="hint-code">{h.content}</pre>
+                      ) : (
+                        <p>{h.content}</p>
+                      )}
                     </div>
                   ))}
                 {hints && hints.next_level != null && (
@@ -245,14 +300,26 @@ export default function ProblemPage() {
 
         <section className="problem-editor">
           <div className="editor-toolbar">
-            <select value={language} onChange={(e) => onLanguageChange(e.target.value)}>
-              {problem.languages.map((l) => (
-                <option key={l} value={l}>
-                  {l}
-                </option>
-              ))}
-            </select>
+            <div className="toolbar-left">
+              <select value={language} onChange={(e) => onLanguageChange(e.target.value)}>
+                {problem.languages.map((l) => (
+                  <option key={l} value={l}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+              <span className="save-status">
+                {restored
+                  ? `↩ 已恢复上次进度${savedAt ? `（${savedAt} 保存）` : ''}`
+                  : savedAt
+                    ? `✓ 已自动保存 ${savedAt}`
+                    : '✎ 自动保存已开启'}
+              </span>
+            </div>
             <div className="actions">
+              <button onClick={resetToTemplate} className="reset-btn" title="丢弃草稿，恢复初始模板">
+                重置
+              </button>
               <button onClick={() => run(true)} disabled={running} className="run-btn">
                 运行（样例）
               </button>
@@ -269,7 +336,7 @@ export default function ProblemPage() {
               language={MONACO_LANG[language] ?? 'plaintext'}
               value={code}
               onChange={onCodeChange}
-              options={{ minimap: { enabled: false }, fontSize: 14, scrollBeyondLastLine: false }}
+              options={{ minimap: { enabled: false }, fontSize: 16, scrollBeyondLastLine: false }}
             />
           </div>
 
@@ -280,7 +347,7 @@ export default function ProblemPage() {
   );
 }
 
-function Wrapper({ children }: { children: React.ReactNode }) {
+function Wrapper({ children }: { children: ReactNode }) {
   return (
     <div>
       <Header />

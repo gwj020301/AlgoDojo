@@ -68,6 +68,7 @@ async def _upsert_problems(
         problem.difficulty = entry["difficulty"]
         problem.languages = list(entry.get("languages", []))
         problem.templates = dict(entry.get("templates", {}))
+        problem.knowledge_tips = list(entry.get("knowledge_tips", []))
         problem.reference_solution = entry.get("reference_solution")
         by_number[number] = problem
     await session.flush()

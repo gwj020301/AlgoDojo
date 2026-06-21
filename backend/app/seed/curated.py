@@ -48,6 +48,82 @@ def _two_sum() -> dict[str, Any]:
             "用哈希表存放 值->下标。遍历时查 target-num 是否已出现，"
             "命中即返回两个下标，时间 O(n)、空间 O(n)。"
         ),
+        "knowledge_tips": [
+            {
+                "title": "什么是哈希表（Hash Table）",
+                "content": (
+                    "哈希表通过「哈希函数」把键（key）映射到存储位置，从而实现平均 O(1) 的"
+                    "插入、删除和查找。它用空间换时间：把「某个值是否出现过 / 出现在哪」这类"
+                    "查询，从遍历的 O(n) 降到接近 O(1)。\n"
+                    "Python 的 dict（字典）和 set（集合）底层都是哈希表。"
+                ),
+            },
+            {
+                "title": "Python 中怎么创建和使用",
+                "content": (
+                    "创建：\n"
+                    "· 空字典 d = {} 或 d = dict()\n"
+                    "· 空集合 s = set()（注意 {} 是空字典，不是空集合）\n"
+                    "常用操作（均摊 O(1)）：\n"
+                    "· 增 / 改：d[key] = value\n"
+                    "· 查存在：key in d\n"
+                    "· 取值（带默认，避免 KeyError）：d.get(key, default)\n"
+                    "· 删除：del d[key] 或 d.pop(key, None)\n"
+                    "· 遍历键值：for k, v in d.items()"
+                ),
+                "code": {
+                    Language.PYTHON: (
+                        "d = {}              # 创建空字典\n"
+                        "d['a'] = 1          # 写入\n"
+                        "if 'a' in d:        # O(1) 判断键是否存在\n"
+                        "    print(d['a'])\n"
+                        "print(d.get('b', 0))  # 不存在返回默认值 0\n\n"
+                        "from collections import defaultdict, Counter\n"
+                        "cnt = Counter('aabbbc')   # {'a':2,'b':3,'c':1} 计数神器\n"
+                        "g = defaultdict(list)     # 值默认空列表，省去判断\n"
+                        "g['x'].append(1)\n"
+                    ),
+                    Language.TYPESCRIPT: (
+                        "const m = new Map<string, number>(); // 推荐用 Map\n"
+                        "m.set('a', 1);\n"
+                        "if (m.has('a')) console.log(m.get('a'));\n"
+                        "console.log(m.get('b') ?? 0);  // 不存在给默认值\n\n"
+                        "const s = new Set<number>();   // 集合：只判存在\n"
+                        "s.add(7);\n"
+                        "console.log(s.has(7));\n"
+                    ),
+                },
+            },
+            {
+                "title": "必备知识 / 易错点",
+                "content": (
+                    "1. 键必须「可哈希」：数字、字符串、元组可作键；列表、字典不可（会报 "
+                    "unhashable type）。\n"
+                    "2. 哈希查找是「平均」O(1)，极端情况可能退化，但刷题中按 O(1) 估算即可。\n"
+                    "3. dict 从 Python 3.7 起保持「插入顺序」。\n"
+                    "4. 想统计出现次数用 collections.Counter；想要默认值用 defaultdict，"
+                    "比手动 if 判断更简洁。\n"
+                    "5. 集合 set 适合「去重」和「只关心存在与否」的场景。"
+                ),
+            },
+            {
+                "title": "本题如何用哈希",
+                "content": (
+                    "边遍历边建哈希表 seen = {值: 下标}。对当前 x，先查 target - x 是否已在 "
+                    "seen 中：在就说明配对的另一个数之前出现过，直接返回两个下标；不在就把 x "
+                    "存入 seen 继续。一次遍历、O(n) 时间，避免了 O(n^2) 的双重循环。"
+                ),
+                "code": {
+                    Language.PYTHON: (
+                        "seen = {}\n"
+                        "for i, x in enumerate(nums):\n"
+                        "    if target - x in seen:\n"
+                        "        return [seen[target - x], i]\n"
+                        "    seen[x] = i\n"
+                    ),
+                },
+            },
+        ],
         "templates": {
             Language.PYTHON: (
                 "class Solution:\n"
@@ -84,8 +160,13 @@ def _two_sum() -> dict[str, Any]:
             {"level": 2, "content": "遍历时，对每个 num 需要快速判断 target-num 是否出现过。"},
             {
                 "level": 3,
-                "content": "seen = {}; for i, x in nums: if target-x in seen: "
-                "return [seen[target-x], i]; seen[x] = i",
+                "content": (
+                    "seen = {}                      # 值 -> 下标\n"
+                    "for i, x in enumerate(nums):\n"
+                    "    if target - x in seen:      # 配对的数之前出现过\n"
+                    "        return [seen[target - x], i]\n"
+                    "    seen[x] = i                 # 记录当前值的下标"
+                ),
             },
             {"level": 4, "content": "用哈希表记录 值->下标，一次遍历即可，时间/空间均 O(n)。"},
         ],
@@ -98,6 +179,38 @@ def _climb_stairs() -> dict[str, Any]:
         "reference_solution": (
             "f(n)=f(n-1)+f(n-2)，即斐波那契。用两个变量滚动递推，时间 O(n)、空间 O(1)。"
         ),
+        "knowledge_tips": [
+            {
+                "title": "什么是动态规划（DP）",
+                "content": (
+                    "动态规划把大问题拆成「重叠的子问题」，先解小的、用结果推大的，避免重复计算。"
+                    "三要素：① 状态（dp[i] 表示什么）② 转移方程（dp[i] 由哪些更小的状态得来）"
+                    "③ 边界（最小状态的初值）。"
+                ),
+            },
+            {
+                "title": "滚动变量优化空间",
+                "content": (
+                    "当 dp[i] 只依赖前面固定的几个状态（如本题只用 dp[i-1]、dp[i-2]）时，"
+                    "不必开整个数组，用几个变量「滚动」即可把空间从 O(n) 降到 O(1)。"
+                ),
+                "code": {
+                    Language.PYTHON: (
+                        "a, b = 1, 1          # f(0)=1, f(1)=1\n"
+                        "for _ in range(n - 1):\n"
+                        "    a, b = b, a + b  # 同时更新，滚动前进\n"
+                        "return b\n"
+                    ),
+                },
+            },
+            {
+                "title": "本题状态与转移",
+                "content": (
+                    "到达第 n 阶，最后一步要么从 n-1 跨 1 阶、要么从 n-2 跨 2 阶上来，"
+                    "故 f(n)=f(n-1)+f(n-2)，边界 f(1)=1、f(2)=2。本质就是斐波那契数列。"
+                ),
+            },
+        ],
         "templates": {
             Language.PYTHON: (
                 "class Solution:\n"
@@ -117,7 +230,15 @@ def _climb_stairs() -> dict[str, Any]:
         "hints": [
             {"level": 1, "content": "到达第 n 阶，最后一步只能从 n-1 或 n-2 上来。"},
             {"level": 2, "content": "因此方法数 f(n) = f(n-1) + f(n-2)。"},
-            {"level": 3, "content": "a, b = 1, 1; 重复 n-1 次: a, b = b, a+b; 返回 b。"},
+            {
+                "level": 3,
+                "content": (
+                    "a, b = 1, 1              # f(1), f(2)\n"
+                    "重复 n - 1 次:\n"
+                    "    a, b = b, a + b      # 滚动前进\n"
+                    "返回 b"
+                ),
+            },
             {"level": 4, "content": "本质是斐波那契数列，滚动变量即可 O(1) 空间。"},
         ],
     }

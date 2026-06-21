@@ -1,59 +1,50 @@
 :root {
-  --paper: #efe3c8;
-  --paper-2: #f6eed8;
-  --panel: #f8f1de;
-  --ink: #2e2a22;
-  --ink-2: #6b6353;
-  --cinnabar: #9c2b1b;
-  --cinnabar-soft: #b3493a;
-  --dai: #34534b;
-  --bamboo: #8a6d3b;
-  --border: #cdbb95;
-  --border-soft: #ddcfac;
-
-  font-family: 'Kaiti SC', 'STKaiti', 'KaiTi', 'Songti SC', 'Noto Serif SC', 'SimSun', serif;
-  line-height: 1.7;
-  color: var(--ink);
-  background-color: var(--paper);
+  --sv-green: #5a8f3c;
+  --sv-green-light: #7ec850;
+  --sv-wood: #8a5a2b;
+  --sv-wood-dark: #5c3a1e;
+  --sv-cream: #fbe6c2;
+  --sv-gold: #f5c542;
+  --sv-gold-dark: #c9a026;
+  --sv-parchment: #fff8e7;
+  --sv-brown-bg: #3d2b1f;
+  --sv-red: #d94040;
+  --sv-text: #3d2b1f;
+  --sv-text-light: #fbe6c2;
+  --sv-shadow: rgba(90, 50, 20, 0.3);
+  --sv-radius: 7px;
 }
 
-* {
-  box-sizing: border-box;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root { min-height: 100vh; }
 
 body {
-  margin: 0;
-  min-height: 100vh;
-  background-color: var(--paper);
+  background-color: #8b6b3d;
+  /* 星露谷耕地：深浅交替的泥土格 + 翻土痕迹 */
   background-image:
-    radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.35), transparent 40%),
-    radial-gradient(circle at 80% 80%, rgba(140, 109, 59, 0.08), transparent 45%),
-    radial-gradient(circle at 50% 50%, rgba(46, 42, 34, 0.02), transparent 60%);
-  background-attachment: fixed;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' shape-rendering='crispEdges'%3E%3C!-- 未耕地 --%3E%3Crect width='32' height='32' fill='%23a07840'/%3E%3C!-- 耕地格（深色翻土） --%3E%3Crect x='1' y='1' width='14' height='14' fill='%23704820'/%3E%3Crect x='17' y='1' width='14' height='14' fill='%23704820'/%3E%3Crect x='1' y='17' width='14' height='14' fill='%23704820'/%3E%3Crect x='17' y='17' width='14' height='14' fill='%23704820'/%3E%3C!-- 土沟纹理 --%3E%3Crect x='2' y='4' width='12' height='1' fill='%23603810'/%3E%3Crect x='2' y='8' width='12' height='1' fill='%23603810'/%3E%3Crect x='2' y='12' width='12' height='1' fill='%23603810'/%3E%3Crect x='18' y='4' width='12' height='1' fill='%23603810'/%3E%3Crect x='18' y='8' width='12' height='1' fill='%23603810'/%3E%3Crect x='18' y='12' width='12' height='1' fill='%23603810'/%3E%3Crect x='2' y='20' width='12' height='1' fill='%23603810'/%3E%3Crect x='2' y='24' width='12' height='1' fill='%23603810'/%3E%3Crect x='2' y='28' width='12' height='1' fill='%23603810'/%3E%3Crect x='18' y='20' width='12' height='1' fill='%23603810'/%3E%3Crect x='18' y='24' width='12' height='1' fill='%23603810'/%3E%3Crect x='18' y='28' width='12' height='1' fill='%23603810'/%3E%3C!-- 高光土粒 --%3E%3Crect x='4' y='3' width='2' height='1' fill='%23906030'/%3E%3Crect x='9' y='7' width='2' height='1' fill='%23906030'/%3E%3Crect x='20' y='5' width='2' height='1' fill='%23906030'/%3E%3Crect x='25' y='10' width='2' height='1' fill='%23906030'/%3E%3Crect x='6' y='22' width='2' height='1' fill='%23906030'/%3E%3Crect x='22' y='26' width='2' height='1' fill='%23906030'/%3E%3C!-- 偶尔的小嫩芽 --%3E%3Crect x='7' y='6' width='1' height='2' fill='%2360a830'/%3E%3Crect x='8' y='5' width='1' height='1' fill='%2380c840'/%3E%3Crect x='23' y='22' width='1' height='2' fill='%2360a830'/%3E%3Crect x='24' y='21' width='1' height='1' fill='%2380c840'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px 128px;
+  image-rendering: pixelated;
+  color: var(--sv-text);
+  font-family: 'VT323', 'Courier New', monospace;
+  font-size: 18px;
+  line-height: 1.5;
 }
 
-h1,
-h2,
-h3 {
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--ink);
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Pixelify Sans', 'VT323', monospace;
 }
 
-a {
-  color: var(--dai);
+p, span, li, td, input, textarea, select {
+  font-family: 'VT323', monospace;
 }
 
-::selection {
-  background: rgba(156, 43, 27, 0.18);
-}
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--sv-wood-dark); border-radius: 5px; }
+::-webkit-scrollbar-thumb { background: var(--sv-gold-dark); border-radius: 5px; border: 2px solid var(--sv-wood-dark); }
+::-webkit-scrollbar-thumb:hover { background: var(--sv-gold); }
 
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 6px;
-}
+a { color: var(--sv-gold-dark); text-decoration: none; }
+a:hover { color: var(--sv-gold); }

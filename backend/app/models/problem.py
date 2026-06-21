@@ -42,6 +42,8 @@ class Problem(Base):
     languages: Mapped[list[str]] = mapped_column(JSONType, default=list)
     # 各语言初始代码模板，如 {"python": "...", "typescript": "..."}
     templates: Mapped[dict[str, str]] = mapped_column(JSONType, default=dict)
+    # 相关基础知识 Tips：[{title, content, code: {python, typescript}}]
+    knowledge_tips: Mapped[list[dict]] = mapped_column(JSONType, default=list)
     reference_solution: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     topic: Mapped["Topic"] = relationship(back_populates="problems")

@@ -29,6 +29,12 @@ class SampleCase(BaseModel):
     expected_output: str
 
 
+class KnowledgeTip(BaseModel):
+    title: str
+    content: str
+    code: dict[str, str] = {}
+
+
 class ProblemDetail(BaseModel):
     id: int
     number: int
@@ -41,6 +47,7 @@ class ProblemDetail(BaseModel):
     templates: dict[str, str]
     status: str
     samples: list[SampleCase]
+    knowledge_tips: list[KnowledgeTip]
 
 
 class SubmissionSummary(BaseModel):

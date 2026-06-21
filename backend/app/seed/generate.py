@@ -66,6 +66,7 @@ def build_seed_dict(curated: bool = True) -> dict[str, Any]:
                 "description": p.description,
                 "reference_solution": overlay.get("reference_solution"),
                 "templates": overlay.get("templates", {}),
+                "knowledge_tips": overlay.get("knowledge_tips", []),
                 "test_cases": overlay.get("test_cases", []),
                 "hints": overlay.get("hints", []),
             }

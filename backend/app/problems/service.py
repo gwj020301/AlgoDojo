@@ -100,9 +100,7 @@ async def get_problem_detail(
             .order_by(TestCase.id)
         )
     ).scalars()
-    samples = [
-        SampleCase(input=tc.input, expected_output=tc.expected_output) for tc in sample_rows
-    ]
+    samples = [SampleCase(input=tc.input, expected_output=tc.expected_output) for tc in sample_rows]
     return ProblemDetail(
         id=problem.id,
         number=problem.number,
@@ -115,6 +113,7 @@ async def get_problem_detail(
         templates=problem.templates or {},
         status=status_by_problem.get(problem.id, ProblemStatus.NOT_STARTED),
         samples=samples,
+        knowledge_tips=problem.knowledge_tips or [],
     )
 
 

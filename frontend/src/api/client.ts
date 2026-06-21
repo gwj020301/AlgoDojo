@@ -85,6 +85,7 @@ export interface ProblemDetail {
   templates: Record<string, string>;
   status: ProblemStatus;
   samples: { input: string; expected_output: string }[];
+  knowledge_tips: { title: string; content: string; code: Record<string, string> }[];
 }
 
 export interface ProblemFilters {

@@ -144,6 +144,9 @@ async def _seed_api(client) -> str:
                     difficulty="easy",
                     languages=["python", "typescript"],
                     templates={"python": "tpl-py"},
+                    knowledge_tips=[
+                        {"title": "哈希表", "content": "用字典查存在", "code": {"python": "d={}"}}
+                    ],
                 ),
                 Problem(
                     number=4,
@@ -202,6 +205,8 @@ async def test_problem_detail_includes_templates(client) -> None:
     assert body["description"] == "desc1"
     assert body["templates"]["python"] == "tpl-py"
     assert body["topic_name"] == "哈希"
+    assert body["knowledge_tips"][0]["title"] == "哈希表"
+    assert body["knowledge_tips"][0]["code"]["python"] == "d={}"
 
 
 async def test_problem_detail_404(client) -> None:
